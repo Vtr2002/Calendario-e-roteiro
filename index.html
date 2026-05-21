@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calendário Parmeca</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bur:#6B1A2A;--bur2:#8B2A3E;--bur3:#F5EEF0;
+  --bg:#FAF9F7;--bg2:#F2EFE9;--bg3:#FFFFFF;
+  --text:#1A1108;--text2:#6B6155;--text3:#A89E94;
+  --border:#E5DFD8;--border2:#CFC8BF;
+  --radius:10px;--radius-sm:6px;
+  --shadow:0 1px 4px rgba(0,0,0,.07);
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.app{max-width:900px;margin:0 auto;padding:24px 16px 80px}
+
+/* HEADER */
+.app-header{display:flex;align-items:center;gap:10px;margin-bottom:24px}
+.app-logo{width:32px;height:32px;background:var(--bur);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.app-logo span{color:#fff;font-size:14px;font-weight:700;letter-spacing:-.5px}
+.app-title{font-size:17px;font-weight:600;color:var(--text)}
+.app-sub{font-size:12px;color:var(--text3);margin-top:1px}
+.header-status{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3)}
+.status-dot-live{width:6px;height:6px;border-radius:50%;background:#1D9E75;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* MAIN TABS */
+.main-tabs{display:flex;gap:2px;margin-bottom:20px;background:var(--bg2);border-radius:var(--radius);padding:3px}
+.main-tab{flex:1;padding:8px 0;text-align:center;font-size:13px;font-weight:500;cursor:pointer;border-radius:8px;border:none;background:transparent;color:var(--text2);transition:all .15s}
+.main-tab.active{background:var(--bg3);color:var(--text);box-shadow:var(--shadow);border:0.5px solid var(--border)}
+
+/* RESUMO */
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px}
+.sum-card{background:var(--bg3);border-radius:var(--radius-sm);padding:12px;border:0.5px solid var(--border)}
+.sum-label{font-size:10px;color:var(--text3);font-weight:500;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.sum-val{font-size:22px;font-weight:600;color:var(--text);line-height:1}
+.sum-sub{font-size:11px;color:var(--text3);margin-top:2px}
+
+/* CALENDÁRIO */
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cal-title{font-size:15px;font-weight:600;color:var(--text)}
+.cal-nav{display:flex;gap:4px}
+.cal-nav button{background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--radius-sm);width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2)}
+.cal-nav button:hover{background:var(--bg2)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-dayname{text-align:center;font-size:10px;font-weight:500;color:var(--text3);padding:4px 0 6px}
+.cal-cell{height:90px;border-radius:var(--radius-sm);border:0.5px solid var(--border);padding:5px;background:var(--bg3);overflow:hidden;display:flex;flex-direction:column}
+.cal-cell.other{background:var(--bg2);opacity:.5}
+.cal-cell.today{border-color:var(--bur);border-width:1.5px}
+.dnum{font-size:11px;color:var(--text3);margin-bottom:3px;flex-shrink:0;line-height:1}
+.dnum.t{background:var(--bur);color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:10px;margin-bottom:3px}
+.pills-wrap{overflow:hidden;flex:1;display:flex;flex-direction:column;gap:2px}
+.pill{font-size:9px;border-radius:3px;padding:2px 5px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer;line-height:1.4;display:flex;align-items:center;gap:3px;flex-shrink:0}
+.pill-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+
+/* CONTEÚDO */
+.content-filters{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.cchip{padding:5px 14px;border-radius:99px;border:0.5px solid var(--border);background:transparent;font-size:12px;font-weight:500;cursor:pointer;color:var(--text2);transition:all .15s}
+.cchip:hover{background:var(--bg2)}
+.cchip.on{color:#fff;border-color:transparent}
+.briefing-card{border:0.5px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px;background:var(--bg3);cursor:pointer;transition:border-color .15s}
+.briefing-card:hover{border-color:var(--border2)}
+.briefing-card.expanded{border-color:var(--bur)}
+.bc-top{display:flex;align-items:flex-start;gap:10px}
+.bc-info{flex:1;min-width:0}
+.bc-title{font-size:14px;font-weight:500;color:var(--text);margin-bottom:4px}
+.bc-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.bc-body{margin-top:12px;padding-top:12px;border-top:0.5px solid var(--border);display:none}
+.briefing-card.expanded .bc-body{display:block}
+.bc-field{margin-bottom:10px}
+.bc-field-label{font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
+.bc-field-val{font-size:13px;color:var(--text);line-height:1.6}
+.bc-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+
+/* FAB */
+.fab{position:fixed;bottom:24px;right:24px;z-index:100}
+.fab-main{width:46px;height:46px;border-radius:50%;background:var(--bur);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;box-shadow:0 2px 12px rgba(107,26,42,.3);transition:transform .15s}
+.fab-main:hover{transform:scale(1.06)}
+.fab-menu{position:absolute;bottom:54px;right:0;display:none;flex-direction:column;gap:6px;align-items:flex-end}
+.fab-menu.open{display:flex}
+.fab-item{display:flex;align-items:center;gap:8px;cursor:pointer;animation:fadeUp .15s ease both}
+.fab-item-label{font-size:12px;font-weight:500;background:var(--bg3);border:0.5px solid var(--border);border-radius:99px;padding:5px 14px;color:var(--text);white-space:nowrap;box-shadow:var(--shadow)}
+.fab-item-icon{width:36px;height:36px;border-radius:50%;background:var(--bur);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;flex-shrink:0}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* DRAWER */
+.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.2);z-index:200;display:none}
+.drawer-overlay.open{display:block}
+.drawer{position:fixed;top:0;right:-420px;width:400px;max-width:95vw;height:100vh;background:var(--bg3);border-left:0.5px solid var(--border);z-index:201;transition:right .22s ease;overflow-y:auto;padding:20px}
+.drawer.open{right:0}
+.drawer-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.drawer-title{font-size:15px;font-weight:600;color:var(--text)}
+.drawer-close{background:transparent;border:none;cursor:pointer;color:var(--text3);font-size:18px;padding:2px;border-radius:6px}
+.drawer-close:hover{background:var(--bg2)}
+
+/* FORMS */
+.field-group{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.field-label{font-size:10px;color:var(--text3);font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+.field-input,.field-select,.field-textarea{font-size:13px;padding:7px 10px;border-radius:var(--radius-sm);border:0.5px solid var(--border2);background:var(--bg);color:var(--text);width:100%;outline:none;transition:border-color .15s}
+.field-input:focus,.field-select:focus,.field-textarea:focus{border-color:var(--bur)}
+.field-textarea{resize:vertical;min-height:76px;line-height:1.5}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn-primary{padding:8px 18px;background:var(--bur);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;width:100%;margin-top:4px;transition:background .15s}
+.btn-primary:hover{background:var(--bur2)}
+.btn-secondary{padding:7px 14px;background:transparent;border:0.5px solid var(--border2);color:var(--text2);border-radius:var(--radius-sm);font-size:12px;cursor:pointer;transition:all .15s}
+.btn-secondary:hover{background:var(--bg2)}
+.btn-danger{padding:7px 14px;background:transparent;border:0.5px solid #E24B4A60;color:#E24B4A;border-radius:var(--radius-sm);font-size:12px;cursor:pointer;width:100%;margin-top:8px}
+.btn-agendar{padding:6px 14px;background:var(--bur);color:#fff;border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:500;cursor:pointer}
+
+/* LISTA */
+.campaign-card{border:0.5px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:8px;cursor:pointer;background:var(--bg3);transition:border-color .15s}
+.campaign-card:hover{border-color:var(--border2)}
+.card-row{display:flex;align-items:flex-start;gap:10px}
+.card-date{font-size:11px;color:var(--text3);min-width:52px;padding-top:1px}
+.card-name{font-size:13px;font-weight:500;color:var(--text);flex:1;line-height:1.4}
+.badges{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.badge{font-size:10px;font-weight:500;padding:2px 8px;border-radius:99px}
+.budget-bg{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:8px}
+.budget-fill{height:4px;background:var(--bur);border-radius:2px}
+.budget-nums{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:2px}
+.month-label{font-size:12px;font-weight:500;color:var(--text3);margin:14px 0 6px;padding-bottom:4px;border-bottom:0.5px solid var(--border)}
+
+/* FILTROS */
+.filter-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.chip{padding:4px 12px;border-radius:99px;border:0.5px solid var(--border);background:transparent;font-size:12px;font-weight:500;cursor:pointer;color:var(--text2)}
+.chip:hover{background:var(--bg2)}
+.chip.on{color:#fff;border-color:transparent}
+.section-label{font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;margin-top:12px}
+.search-wrap{position:relative;margin-bottom:16px}
+.search-input{font-size:13px;padding:7px 10px 7px 34px;border-radius:99px;border:0.5px solid var(--border2);background:var(--bg);color:var(--text);width:100%;outline:none}
+.search-input:focus{border-color:var(--bur)}
+.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:14px;pointer-events:none}
+
+/* LOADING */
+.loading{display:flex;align-items:center;justify-content:center;padding:3rem;color:var(--text3);font-size:13px;gap:8px}
+.spinner{width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--bur);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;font-size:12px;padding:8px 16px;border-radius:99px;z-index:300;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+
+/* STATUS DOT */
+.status-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:3px}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="app-header">
+    <div class="app-logo"><span>P</span></div>
+    <div>
+      <div class="app-title">Calendário Parmeca</div>
+      <div class="app-sub">Campanhas & Conteúdo</div>
+    </div>
+    <div class="header-status">
+      <div class="status-dot-live" id="conn-dot" style="background:#E24B4A"></div>
+      <span id="conn-label">conectando...</span>
+    </div>
+  </div>
+
+  <div class="main-tabs">
+    <button class="main-tab active" id="tab-cal" onclick="switchMain('cal')">
+      <i class="ti ti-calendar"></i> Calendário
+    </button>
+    <button class="main-tab" id="tab-content" onclick="switchMain('content')">
+      <i class="ti ti-file-text"></i> Roteiro & Conteúdo
+    </button>
+  </div>
+
+  <!-- VIEW CALENDÁRIO -->
+  <div id="view-cal">
+    <div id="summary" class="summary"></div>
+    <div class="cal-header">
+      <span class="cal-title" id="cal-title"></span>
+      <div class="cal-nav">
+        <button onclick="prevMonth()"><i class="ti ti-chevron-left"></i></button>
+        <button onclick="nextMonth()"><i class="ti ti-chevron-right"></i></button>
+      </div>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+  </div>
+
+  <!-- VIEW CONTEÚDO -->
+  <div id="view-content" style="display:none">
+    <div class="content-filters">
+      <button class="cchip on" id="cf-todos" style="background:var(--bur);color:#fff" onclick="setCF('todos')">Todos</button>
+      <button class="cchip" id="cf-rascunho" onclick="setCF('rascunho')">Rascunho</button>
+      <button class="cchip" id="cf-aprovado" onclick="setCF('aprovado')">Aprovado</button>
+      <button class="cchip" id="cf-agendado" onclick="setCF('agendado')">Agendado</button>
+    </div>
+    <div id="briefings-list"></div>
+  </div>
+
+</div>
+
+<!-- FAB -->
+<div class="fab">
+  <div class="fab-menu" id="fab-menu">
+    <div class="fab-item" style="animation-delay:.06s" onclick="openDrawer('nova-campanha')">
+      <span class="fab-item-label">Nova campanha</span>
+      <div class="fab-item-icon"><i class="ti ti-calendar-plus"></i></div>
+    </div>
+    <div class="fab-item" style="animation-delay:.04s" onclick="openDrawer('novo-briefing')">
+      <span class="fab-item-label">Novo roteiro</span>
+      <div class="fab-item-icon"><i class="ti ti-file-plus"></i></div>
+    </div>
+    <div class="fab-item" style="animation-delay:.02s" onclick="openDrawer('lista')">
+      <span class="fab-item-label">Lista de campanhas</span>
+      <div class="fab-item-icon"><i class="ti ti-list"></i></div>
+    </div>
+    <div class="fab-item" onclick="openDrawer('filtros')">
+      <span class="fab-item-label">Filtros</span>
+      <div class="fab-item-icon"><i class="ti ti-adjustments-horizontal"></i></div>
+    </div>
+  </div>
+  <button class="fab-main" onclick="toggleFab()"><i class="ti ti-dots" id="fab-icon"></i></button>
+</div>
+
+<div class="drawer-overlay" id="overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <span class="drawer-title" id="drawer-title"></span>
+    <button class="drawer-close" onclick="closeDrawer()"><i class="ti ti-x"></i></button>
+  </div>
+  <div id="drawer-body"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ================================================
+// CONFIG
+// ================================================
+const SUPA_URL = 'https://jlujwzvpjxdnzulndecs.supabase.co/rest/v1';
+const SUPA_KEY = 'sb_publishable_nc7suAevy680DnEOAIDqKw_IcAD3nTp';
+const HEADERS = {
+  'Content-Type': 'application/json',
+  'apikey': SUPA_KEY,
+  'Authorization': `Bearer ${SUPA_KEY}`,
+  'Prefer': 'return=representation'
+};
+
+// ================================================
+// CONSTANTS
+// ================================================
+const OBJ_COLORS = {
+  'Reconhecimento':'#185FA5','Tráfego':'#639922','Engajamento':'#BA7517',
+  'Leads':'#993556','Vendas':'#6B1A2A','A definir':'#888780','':'#AAAAAA'
+};
+const STATUS_COLOR = {
+  'Ativa':'#1D9E75','Pausada':'#BA7517','Encerrada':'#888780','Stand by':'#185FA5'
+};
+const BRIEF_STATUS = {
+  rascunho:{label:'Rascunho',color:'#888780'},
+  aprovado:{label:'Aprovado',color:'#BA7517'},
+  agendado:{label:'Agendado',color:'#1D9E75'}
+};
+const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const DAYS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+// ================================================
+// STATE
+// ================================================
+let campaigns = [], briefings = [];
+let calYear = 2025, calMonth = 4;
+let fabOpen = false, activeMain = 'cal', cfFilter = 'todos', expandedBriefId = null;
+let filters = {obj:'todos', status:'todos', q:''};
+
+// ================================================
+// SUPABASE API
+// ================================================
+async function sbGet(table, params = '') {
+  const r = await fetch(`${SUPA_URL}/${table}?order=id.asc${params}`, {headers: HEADERS});
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function sbPost(table, data) {
+  const r = await fetch(`${SUPA_URL}/${table}`, {method:'POST', headers: HEADERS, body: JSON.stringify(data)});
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function sbPatch(table, id, data) {
+  const r = await fetch(`${SUPA_URL}/${table}?id=eq.${id}`, {method:'PATCH', headers: HEADERS, body: JSON.stringify(data)});
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function sbDelete(table, id) {
+  const r = await fetch(`${SUPA_URL}/${table}?id=eq.${id}`, {method:'DELETE', headers: {...HEADERS, 'Prefer':''}});
+  if (!r.ok) throw new Error(await r.text());
+}
+
+// ================================================
+// INIT
+// ================================================
+async function init() {
+  try {
+    [campaigns, briefings] = await Promise.all([sbGet('campaigns'), sbGet('briefings')]);
+    setConn(true);
+    render();
+  } catch(e) {
+    setConn(false);
+    showToast('Erro ao conectar com Supabase');
+    console.error(e);
+  }
+}
+
+function setConn(ok) {
+  document.getElementById('conn-dot').style.background = ok ? '#1D9E75' : '#E24B4A';
+  document.getElementById('conn-label').textContent = ok ? 'conectado' : 'erro de conexão';
+}
+
+// ================================================
+// TOAST
+// ================================================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ================================================
+// NAVIGATION
+// ================================================
+function switchMain(t) {
+  activeMain = t;
+  document.getElementById('view-cal').style.display = t === 'cal' ? 'block' : 'none';
+  document.getElementById('view-content').style.display = t === 'content' ? 'block' : 'none';
+  document.getElementById('tab-cal').classList.toggle('active', t === 'cal');
+  document.getElementById('tab-content').classList.toggle('active', t === 'content');
+  if (t === 'content') renderBriefings();
+}
+
+function toggleFab() {
+  fabOpen = !fabOpen;
+  document.getElementById('fab-menu').classList.toggle('open', fabOpen);
+  document.getElementById('fab-icon').className = fabOpen ? 'ti ti-x' : 'ti ti-dots';
+}
+
+function openDrawer(type, id) {
+  fabOpen = false;
+  document.getElementById('fab-menu').classList.remove('open');
+  document.getElementById('fab-icon').className = 'ti ti-dots';
+  const titles = {
+    'nova-campanha':'Nova campanha','novo-briefing':'Novo roteiro',
+    'lista':'Campanhas','filtros':'Filtros',
+    'edit-camp':'Editar campanha','edit-brief':'Editar roteiro','agendar':'Agendar no calendário'
+  };
+  document.getElementById('drawer-title').textContent = titles[type] || '';
+  if (type === 'nova-campanha') document.getElementById('drawer-body').innerHTML = buildCampForm();
+  else if (type === 'novo-briefing') document.getElementById('drawer-body').innerHTML = buildBriefForm();
+  else if (type === 'edit-camp') document.getElementById('drawer-body').innerHTML = buildCampForm(campaigns.find(c => c.id === id));
+  else if (type === 'edit-brief') document.getElementById('drawer-body').innerHTML = buildBriefForm(briefings.find(b => b.id === id));
+  else if (type === 'agendar') document.getElementById('drawer-body').innerHTML = buildAgendarForm(briefings.find(b => b.id === id));
+  else if (type === 'lista') document.getElementById('drawer-body').innerHTML = buildListHTML();
+  else if (type === 'filtros') document.getElementById('drawer-body').innerHTML = buildFiltersHTML();
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+}
+
+function closeDrawer() {
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('drawer').classList.remove('open');
+}
+
+// ================================================
+// FORM CAMPANHA
+// ================================================
+function buildCampForm(c) {
+  const ed = !!c;
+  return `
+  <div class="field-group"><span class="field-label">Nome</span><input class="field-input" id="f-name" value="${c ? esc(c.name) : ''}" placeholder="Nome da campanha"></div>
+  <div class="row2">
+    <div class="field-group"><span class="field-label">Data início</span><input class="field-input" id="f-start" type="date" value="${c ? (c.start||'') : ''}"></div>
+    <div class="field-group"><span class="field-label">Data fim</span><input class="field-input" id="f-end" type="date" value="${c ? (c.end||'') : ''}"></div>
+  </div>
+  <div class="row2">
+    <div class="field-group"><span class="field-label">Formato</span><select class="field-select" id="f-format">${['Stories','Feed','Reels','Reels/Stories','Feed & Stories','Outro'].map(o=>`<option${c&&c.format===o?' selected':''}>${o}</option>`).join('')}</select></div>
+    <div class="field-group"><span class="field-label">Canal</span><select class="field-select" id="f-canal">${['Meta','Google','iFood','Orgânico','Outro'].map(o=>`<option${c&&c.canal===o?' selected':''}>${o}</option>`).join('')}</select></div>
+  </div>
+  <div class="field-group"><span class="field-label">Objetivo</span><select class="field-select" id="f-obj">
+    <option value=""${c&&!c.objetivo?' selected':''}>Sem tráfego</option>
+    ${['Reconhecimento','Tráfego','Engajamento','Leads','Vendas','A definir'].map(o=>`<option${c&&c.objetivo===o?' selected':''}>${o}</option>`).join('')}
+  </select></div>
+  <div class="row2">
+    <div class="field-group"><span class="field-label">Orçamento total (R$)</span><input class="field-input" id="f-budget" type="number" value="${c ? c.budget : ''}" placeholder="0"></div>
+    <div class="field-group"><span class="field-label">Gasto até agora (R$)</span><input class="field-input" id="f-spent" type="number" value="${c ? c.spent : ''}" placeholder="0"></div>
+  </div>
+  <div class="field-group"><span class="field-label">Status</span><select class="field-select" id="f-status">
+    ${['Stand by','Ativa','Pausada','Encerrada'].map(o=>`<option${c&&c.status===o?' selected':''}>${o}</option>`).join('')}
+  </select></div>
+  <div class="field-group"><span class="field-label">Posts vinculados</span><input class="field-input" id="f-posts" value="${c ? esc(c.posts||'') : ''}" placeholder="Link ou descrição do criativo"></div>
+  <button class="btn-primary" onclick="${ed ? `saveEditCamp(${c.id})` : 'addCampaign()'}">${ed ? 'Salvar alterações' : 'Adicionar campanha'}</button>
+  ${ed ? `<button class="btn-danger" onclick="deleteCampaign(${c.id})">Excluir campanha</button>` : ''}`;
+}
+
+async function addCampaign() {
+  const data = campFormData();
+  try {
+    const res = await sbPost('campaigns', data);
+    campaigns.push(res[0]);
+    closeDrawer(); render(); showToast('Campanha criada');
+  } catch(e) { showToast('Erro ao salvar'); console.error(e); }
+}
+
+async function saveEditCamp(id) {
+  const data = campFormData();
+  try {
+    const res = await sbPatch('campaigns', id, data);
+    const i = campaigns.findIndex(c => c.id === id);
+    if (i >= 0) campaigns[i] = res[0];
+    closeDrawer(); render(); showToast('Campanha atualizada');
+  } catch(e) { showToast('Erro ao salvar'); console.error(e); }
+}
+
+async function deleteCampaign(id) {
+  try {
+    await sbDelete('campaigns', id);
+    campaigns = campaigns.filter(c => c.id !== id);
+    closeDrawer(); render(); showToast('Campanha excluída');
+  } catch(e) { showToast('Erro ao excluir'); console.error(e); }
+}
+
+function campFormData() {
+  return {
+    name: v('f-name') || 'Sem nome',
+    start: v('f-start') || null,
+    end: v('f-end') || v('f-start') || null,
+    format: v('f-format'),
+    canal: v('f-canal'),
+    objetivo: v('f-obj'),
+    budget: parseFloat(v('f-budget')) || 0,
+    spent: parseFloat(v('f-spent')) || 0,
+    status: v('f-status'),
+    posts: v('f-posts')
+  };
+}
+
+// ================================================
+// FORM BRIEFING
+// ================================================
+function buildBriefForm(b) {
+  const ed = !!b;
+  return `
+  <div class="field-group"><span class="field-label">Título</span><input class="field-input" id="b-titulo" value="${b ? esc(b.titulo) : ''}" placeholder="Título do conteúdo"></div>
+  <div class="row2">
+    <div class="field-group"><span class="field-label">Formato</span><select class="field-select" id="b-formato">${['Stories','Feed','Reels','Reels/Stories','Feed & Stories','Outro'].map(o=>`<option${b&&b.formato===o?' selected':''}>${o}</option>`).join('')}</select></div>
+    <div class="field-group"><span class="field-label">Responsável</span><input class="field-input" id="b-responsavel" value="${b ? esc(b.responsavel||'') : ''}" placeholder="Nome ou @"></div>
+  </div>
+  <div class="field-group"><span class="field-label">Briefing / roteiro</span><textarea class="field-textarea" id="b-briefing" placeholder="O que deve ser filmado ou fotografado, contexto, mood...">${b ? esc(b.briefing||'') : ''}</textarea></div>
+  <div class="field-group"><span class="field-label">Copy da legenda</span><textarea class="field-textarea" id="b-copy" placeholder="Texto da legenda, emojis, CTA...">${b ? esc(b.copy||'') : ''}</textarea></div>
+  <div class="field-group"><span class="field-label">Referência visual</span><input class="field-input" id="b-referencia" value="${b ? esc(b.referencia||'') : ''}" placeholder="Link ou descrição de estilo"></div>
+  <div class="field-group"><span class="field-label">Status</span><select class="field-select" id="b-status">
+    <option value="rascunho"${b&&b.status==='rascunho'?' selected':''}>Rascunho</option>
+    <option value="aprovado"${b&&b.status==='aprovado'?' selected':''}>Aprovado</option>
+    <option value="agendado"${b&&b.status==='agendado'?' selected':''}>Agendado</option>
+  </select></div>
+  <button class="btn-primary" onclick="${ed ? `saveEditBrief(${b.id})` : 'addBriefing()'}">${ed ? 'Salvar alterações' : 'Criar roteiro'}</button>
+  ${ed ? `<button class="btn-danger" onclick="deleteBriefing(${b.id})">Excluir roteiro</button>` : ''}`;
+}
+
+async function addBriefing() {
+  const data = {
+    titulo: v('b-titulo') || 'Sem título',
+    formato: v('b-formato'),
+    responsavel: v('b-responsavel'),
+    status: v('b-status'),
+    briefing: v('b-briefing'),
+    copy: v('b-copy'),
+    referencia: v('b-referencia'),
+    cal_id: null
+  };
+  try {
+    const res = await sbPost('briefings', data);
+    briefings.push(res[0]);
+    closeDrawer();
+    if (activeMain === 'content') renderBriefings();
+    showToast('Roteiro criado');
+  } catch(e) { showToast('Erro ao salvar'); console.error(e); }
+}
+
+async function saveEditBrief(id) {
+  const data = {
+    titulo: v('b-titulo'),
+    formato: v('b-formato'),
+    responsavel: v('b-responsavel'),
+    status: v('b-status'),
+    briefing: v('b-briefing'),
+    copy: v('b-copy'),
+    referencia: v('b-referencia')
+  };
+  try {
+    const res = await sbPatch('briefings', id, data);
+    const i = briefings.findIndex(b => b.id === id);
+    if (i >= 0) briefings[i] = res[0];
+    closeDrawer();
+    if (activeMain === 'content') renderBriefings();
+    showToast('Roteiro atualizado');
+  } catch(e) { showToast('Erro ao salvar'); console.error(e); }
+}
+
+async function deleteBriefing(id) {
+  try {
+    await sbDelete('briefings', id);
+    briefings = briefings.filter(b => b.id !== id);
+    closeDrawer();
+    if (activeMain === 'content') renderBriefings();
+    showToast('Roteiro excluído');
+  } catch(e) { showToast('Erro ao excluir'); console.error(e); }
+}
+
+// ================================================
+// AGENDAR
+// ================================================
+function buildAgendarForm(b) {
+  if (!b) return '';
+  return `
+  <div style="background:var(--bg2);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:16px">
+    <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px">${esc(b.titulo)}</div>
+    <div style="font-size:11px;color:var(--text3)">${b.formato} · ${b.responsavel||'sem responsável'}</div>
+  </div>
+  <div class="row2">
+    <div class="field-group"><span class="field-label">Data início</span><input class="field-input" id="f-start" type="date"></div>
+    <div class="field-group"><span class="field-label">Data fim</span><input class="field-input" id="f-end" type="date"></div>
+  </div>
+  <div class="field-group"><span class="field-label">Canal</span><select class="field-select" id="f-canal"><option>Meta</option><option>Google</option><option>iFood</option><option>Orgânico</option><option>Outro</option></select></div>
+  <div class="field-group"><span class="field-label">Objetivo</span><select class="field-select" id="f-obj">
+    <option value="">Sem tráfego</option>
+    ${['Reconhecimento','Tráfego','Engajamento','Leads','Vendas','A definir'].map(o=>`<option>${o}</option>`).join('')}
+  </select></div>
+  <div class="row2">
+    <div class="field-group"><span class="field-label">Orçamento total (R$)</span><input class="field-input" id="f-budget" type="number" placeholder="0"></div>
+    <div class="field-group"><span class="field-label">Gasto até agora (R$)</span><input class="field-input" id="f-spent" type="number" placeholder="0"></div>
+  </div>
+  <div class="field-group"><span class="field-label">Status campanha</span><select class="field-select" id="f-status"><option>Stand by</option><option>Ativa</option><option>Pausada</option><option>Encerrada</option></select></div>
+  <button class="btn-primary" onclick="confirmarAgendamento(${b.id})">Agendar no calendário</button>`;
+}
+
+async function confirmarAgendamento(briefId) {
+  const b = briefings.find(x => x.id === briefId);
+  if (!b) return;
+  try {
+    const campData = {
+      name: b.titulo,
+      start: v('f-start') || null,
+      end: v('f-end') || v('f-start') || null,
+      format: b.formato,
+      canal: v('f-canal'),
+      objetivo: v('f-obj'),
+      budget: parseFloat(v('f-budget')) || 0,
+      spent: parseFloat(v('f-spent')) || 0,
+      status: v('f-status'),
+      posts: b.copy
+    };
+    const campRes = await sbPost('campaigns', campData);
+    const newCamp = campRes[0];
+    campaigns.push(newCamp);
+    const briefRes = await sbPatch('briefings', briefId, {status: 'agendado', cal_id: newCamp.id});
+    const i = briefings.findIndex(x => x.id === briefId);
+    if (i >= 0) briefings[i] = briefRes[0];
+    closeDrawer();
+    render();
+    if (activeMain === 'content') renderBriefings();
+    showToast('Agendado no calendário');
+  } catch(e) { showToast('Erro ao agendar'); console.error(e); }
+}
+
+// ================================================
+// RENDER BRIEFINGS
+// ================================================
+function setCF(f) {
+  cfFilter = f;
+  ['todos','rascunho','aprovado','agendado'].forEach(s => {
+    const el = document.getElementById('cf-' + s);
+    if (!el) return;
+    const on = s === f;
+    const col = s==='todos'?'#6B1A2A':s==='rascunho'?'#888780':s==='aprovado'?'#BA7517':'#1D9E75';
+    el.classList.toggle('on', on);
+    el.style.background = on ? col : '';
+    el.style.color = on ? '#fff' : '';
+    el.style.borderColor = on ? 'transparent' : '';
+  });
+  renderBriefings();
+}
+
+function renderBriefings() {
+  const list = cfFilter === 'todos' ? briefings : briefings.filter(b => b.status === cfFilter);
+  const el = document.getElementById('briefings-list');
+  if (!list.length) {
+    el.innerHTML = `<p style="font-size:13px;color:var(--text3);text-align:center;padding:3rem 0">Nenhum roteiro encontrado.</p>`;
+    return;
+  }
+  let html = '';
+  list.forEach(b => {
+    const st = BRIEF_STATUS[b.status] || BRIEF_STATUS.rascunho;
+    const expanded = expandedBriefId === b.id;
+    const linkedCamp = b.cal_id ? campaigns.find(c => c.id === b.cal_id) : null;
+    html += `<div class="briefing-card${expanded ? ' expanded' : ''}" onclick="toggleBrief(${b.id})">
+      <div class="bc-top">
+        <div class="status-dot" style="background:${st.color}"></div>
+        <div class="bc-info">
+          <div class="bc-title">${esc(b.titulo)}</div>
+          <div class="bc-meta">
+            <span class="badge" style="background:#F0EAE0;color:#6B4226">${b.formato||'—'}</span>
+            <span class="badge" style="background:${st.color}18;color:${st.color}">${st.label}</span>
+            ${b.responsavel ? `<span style="font-size:11px;color:var(--text3)">${esc(b.responsavel)}</span>` : ''}
+            ${linkedCamp ? `<span style="font-size:11px;color:#1D9E75"><i class="ti ti-calendar-check" style="font-size:11px"></i> ${fd(linkedCamp.start)}</span>` : ''}
+          </div>
+        </div>
+        <i class="ti ti-chevron-${expanded ? 'up' : 'down'}" style="font-size:13px;color:var(--text3)"></i>
+      </div>
+      <div class="bc-body">
+        ${b.briefing ? `<div class="bc-field"><div class="bc-field-label">Briefing / roteiro</div><div class="bc-field-val">${esc(b.briefing)}</div></div>` : ''}
+        ${b.copy ? `<div class="bc-field"><div class="bc-field-label">Copy da legenda</div><div class="bc-field-val" style="font-style:italic">${esc(b.copy)}</div></div>` : ''}
+        ${b.referencia ? `<div class="bc-field"><div class="bc-field-label">Referência visual</div><div class="bc-field-val">${esc(b.referencia)}</div></div>` : ''}
+        <div class="bc-actions">
+          ${b.status !== 'agendado' ? `<button class="btn-agendar" onclick="event.stopPropagation();openDrawer('agendar',${b.id})"><i class="ti ti-calendar-plus" style="font-size:12px"></i> Agendar</button>` : ''}
+          <button class="btn-secondary" onclick="event.stopPropagation();openDrawer('edit-brief',${b.id})">Editar</button>
+          <button class="btn-secondary" style="color:#E24B4A;border-color:#E24B4A40" onclick="event.stopPropagation();deleteBriefing(${b.id})">Excluir</button>
+        </div>
+      </div>
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+
+function toggleBrief(id) {
+  expandedBriefId = expandedBriefId === id ? null : id;
+  renderBriefings();
+}
+
+// ================================================
+// LISTA CAMPANHAS
+// ================================================
+function buildListHTML() {
+  const fc = filtered();
+  if (!fc.length) return `<p style="font-size:13px;color:var(--text3);text-align:center;padding:2rem 0">Nenhuma campanha encontrada.</p>`;
+  const byMonth = {};
+  fc.forEach(c => {
+    const k = c.start ? c.start.substring(0, 7) : 'sem-data';
+    if (!byMonth[k]) byMonth[k] = [];
+    byMonth[k].push(c);
+  });
+  let html = '';
+  Object.keys(byMonth).sort().forEach(m => {
+    const [y, mo] = m.split('-');
+    html += `<div class="month-label">${MONTHS[parseInt(mo)-1]||m} ${y||''}</div>`;
+    byMonth[m].forEach(c => {
+      const col = OBJ_COLORS[c.objetivo] || '#AAAAAA';
+      const sc = STATUS_COLOR[c.status] || '#888780';
+      const pct = c.budget > 0 ? Math.min(100, Math.round(c.spent / c.budget * 100)) : 0;
+      const dl = c.end && c.end !== c.start ? `${fd(c.start)}–${fd(c.end)}` : fd(c.start);
+      html += `<div class="campaign-card" onclick="openDrawer('edit-camp',${c.id})">
+        <div class="card-row">
+          <span class="card-date">${dl}</span>
+          <div style="flex:1;min-width:0">
+            <div class="card-name">${esc(c.name)}</div>
+            <div class="badges">
+              <span class="badge" style="background:#F0EAE0;color:#6B4226">${c.format||'—'}</span>
+              ${c.objetivo ? `<span class="badge" style="background:${col}18;color:${col}">${c.objetivo}</span>` : ''}
+              <span class="badge" style="background:${sc}18;color:${sc}">${c.status}</span>
+            </div>
+          </div>
+          <i class="ti ti-chevron-right" style="font-size:13px;color:var(--text3);margin-top:2px"></i>
+        </div>
+        ${c.budget > 0 ? `<div class="budget-bg"><div class="budget-fill" style="width:${pct}%"></div></div><div class="budget-nums"><span>R$${c.spent.toLocaleString('pt-BR')} (${pct}%)</span><span>R$${c.budget.toLocaleString('pt-BR')}</span></div>` : ''}
+      </div>`;
+    });
+  });
+  return html;
+}
+
+// ================================================
+// FILTROS
+// ================================================
+function buildFiltersHTML() {
+  const active = filters.obj !== 'todos' || filters.status !== 'todos' || filters.q;
+  return `
+  <div class="search-wrap"><i class="ti ti-search search-icon"></i><input class="search-input" placeholder="Buscar por nome…" value="${filters.q}" oninput="filters.q=this.value;renderSummary()"></div>
+  <div class="section-label">Objetivo</div>
+  <div class="filter-chips">
+    ${[['todos','Todos'],['','Sem tráfego'],['Reconhecimento','Reconhecimento'],['Tráfego','Tráfego'],['Engajamento','Engajamento'],['Leads','Leads'],['Vendas','Vendas']].map(([val,label]) => {
+      const on = filters.obj === val;
+      const col = val === 'todos' ? '#6B1A2A' : (OBJ_COLORS[val] || '#888780');
+      return `<button class="chip${on?' on':''}" style="${on?`background:${col}`:''}" onclick="setF('obj','${val}','${col}',this)">${label}</button>`;
+    }).join('')}
+  </div>
+  <div class="section-label">Status</div>
+  <div class="filter-chips">
+    ${[['todos','Todos'],['Stand by','Stand by'],['Ativa','Ativa'],['Pausada','Pausada'],['Encerrada','Encerrada']].map(([val,label]) => {
+      const on = filters.status === val;
+      const col = val === 'todos' ? '#6B1A2A' : (STATUS_COLOR[val] || '#888780');
+      return `<button class="chip${on?' on':''}" style="${on?`background:${col}`:''}" onclick="setF('status','${val}','${col}',this)">${label}</button>`;
+    }).join('')}
+  </div>
+  ${active ? `<button style="margin-top:16px;padding:6px 16px;background:transparent;border:0.5px solid var(--border2);border-radius:var(--radius-sm);font-size:12px;color:var(--text2);cursor:pointer;width:100%" onclick="clearFilters()">Limpar filtros</button>` : ''}`;
+}
+
+function setF(group, val, col, btn) {
+  filters[group] = val;
+  btn.closest('.filter-chips').querySelectorAll('.chip').forEach(b => {
+    b.classList.remove('on'); b.style.background=''; b.style.color=''; b.style.borderColor='';
+  });
+  btn.classList.add('on'); btn.style.background=col; btn.style.color='#fff'; btn.style.borderColor='transparent';
+  renderSummary(); renderCal();
+}
+
+function clearFilters() {
+  filters = {obj:'todos', status:'todos', q:''};
+  document.getElementById('drawer-body').innerHTML = buildFiltersHTML();
+  renderSummary(); renderCal();
+}
+
+// ================================================
+// RESUMO
+// ================================================
+function renderSummary() {
+  const fc = filtered();
+  const paid = fc.filter(c => c.objetivo && c.objetivo !== '').length;
+  const budget = fc.reduce((a, c) => a + (c.budget||0), 0);
+  const spent = fc.reduce((a, c) => a + (c.spent||0), 0);
+  document.getElementById('summary').innerHTML = `
+    <div class="sum-card"><div class="sum-label">Campanhas</div><div class="sum-val">${fc.length}</div><div class="sum-sub">planejadas</div></div>
+    <div class="sum-card"><div class="sum-label">Tráfego pago</div><div class="sum-val">${paid}</div><div class="sum-sub">campanhas</div></div>
+    <div class="sum-card"><div class="sum-label">Orçamento</div><div class="sum-val">R$${budget.toLocaleString('pt-BR')}</div><div class="sum-sub">alocado</div></div>
+    <div class="sum-card"><div class="sum-label">Gasto</div><div class="sum-val">R$${spent.toLocaleString('pt-BR')}</div><div class="sum-sub">investido</div></div>`;
+}
+
+// ================================================
+// CALENDÁRIO
+// ================================================
+function renderCal() {
+  const today = new Date();
+  const firstDay = new Date(calYear, calMonth, 1).getDay();
+  const dim = new Date(calYear, calMonth+1, 0).getDate();
+  const prevDim = new Date(calYear, calMonth, 0).getDate();
+  document.getElementById('cal-title').textContent = `${MONTHS[calMonth]} ${calYear}`;
+  let html = '';
+  DAYS.forEach(d => { html += `<div class="cal-dayname">${d}</div>`; });
+  for (let i = 0; i < firstDay; i++)
+    html += `<div class="cal-cell other"><div class="dnum">${prevDim - firstDay + 1 + i}</div></div>`;
+  for (let d = 1; d <= dim; d++) {
+    const ds = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = today.getFullYear()===calYear && today.getMonth()===calMonth && today.getDate()===d;
+    const evts = filtered().filter(c => c.start && ds >= c.start && ds <= (c.end||c.start));
+    let pills = '';
+    evts.forEach(e => {
+      const col = OBJ_COLORS[e.objetivo] || '#AAAAAA';
+      const paid = !!e.objetivo && e.objetivo !== '';
+      pills += `<div class="pill" style="background:${paid?col+'18':'#88878010'};color:${paid?col:'#888780'};border:0.5px solid ${paid?col+'50':'#88878030'}" title="${esc(e.name)}" onclick="openDrawer('edit-camp',${e.id})"><div class="pill-dot" style="background:${paid?col:'#AAAAAA'}"></div>${esc(e.name)}</div>`;
+    });
+    html += `<div class="cal-cell${isToday?' today':''}"><div class="dnum${isToday?' t':''}">${d}</div><div class="pills-wrap">${pills}</div></div>`;
+  }
+  const total = firstDay + dim;
+  const rem = total % 7 === 0 ? 0 : 7 - total % 7;
+  for (let i = 1; i <= rem; i++)
+    html += `<div class="cal-cell other"><div class="dnum">${i}</div></div>`;
+  document.getElementById('cal-grid').innerHTML = html;
+}
+
+function prevMonth() { calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } renderCal(); }
+function nextMonth() { calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCal(); }
+
+// ================================================
+// UTILS
+// ================================================
+function filtered() {
+  return campaigns.filter(c => {
+    if (filters.obj !== 'todos' && c.objetivo !== filters.obj) return false;
+    if (filters.status !== 'todos' && c.status !== filters.status) return false;
+    if (filters.q && !c.name.toLowerCase().includes(filters.q.toLowerCase())) return false;
+    return true;
+  });
+}
+function fd(s) { if (!s) return '—'; const [y,m,d] = s.split('-'); return `${d}/${m}`; }
+function v(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function render() { renderSummary(); renderCal(); }
+
+// ================================================
+// START
+// ================================================
+init();
+</script>
+</body>
+</html>
